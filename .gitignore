@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+phishSense-main/node_modules/
+
+# Build output
+phishSense-main/dist/
+
+# Environment
+backend/.env
+
+# macOS
+.DS_Store
+
+# Temp
+*.svg.png

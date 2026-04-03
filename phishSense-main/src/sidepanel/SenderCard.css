@@ -1,0 +1,68 @@
+.sender-card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.sender-card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.sender-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.sender-label {
+  font-weight: bold;
+}
+
+.sender-value {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.sender-auth {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.auth-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.auth-label {
+  font-weight: bold;
+}
+
+.auth-value {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.auth-status.pass .auth-value {
+  background-color: #e7f5e8;
+  color: #2b7533;
+}
+
+.auth-status.fail .auth-value {
+  background-color: #fdecea;
+  color: #c42626;
+}
+
+.mismatch-warning {
+  background-color: #fffbe6;
+  color: #946800;
+  padding: 10px;
+  border-radius: 4px;
+  font-weight: bold;
+}

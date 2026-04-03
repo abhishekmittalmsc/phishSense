@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "PhishSense",
+  "version": "0.1.0",
+  "description": "An extension to detect and flag phishing emails.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://mail.google.com/",
+    "https://outlook.live.com/",
+    "https://outlook.office.com/"
+  ],
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": {
+      "16": "favicon.svg",
+      "48": "favicon.svg",
+      "128": "favicon.svg"
+    }
+  },
+  "icons": {
+    "16": "favicon.svg",
+    "48": "favicon.svg",
+    "128": "favicon.svg"
+  }
+}

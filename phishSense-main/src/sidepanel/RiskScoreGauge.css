@@ -1,0 +1,28 @@
+.risk-score-gauge {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.gauge-svg {
+  transform: rotate(-90deg);
+}
+
+.gauge-background {
+  fill: none;
+  stroke: #e6e6e6;
+  stroke-width: 10;
+}
+
+.gauge-foreground {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease-in-out;
+}
+
+.gauge-text {
+  font-size: 24px;
+  font-weight: bold;
+  transform: rotate(90deg) translate(0, -100px); /* Counter-rotate text */
+}
