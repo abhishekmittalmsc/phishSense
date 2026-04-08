@@ -11,7 +11,8 @@
   "host_permissions": [
     "https://mail.google.com/",
     "https://outlook.live.com/",
-    "https://outlook.office.com/"
+    "https://outlook.office.com/",
+    "https://aide-sdlc-backend.imagine.tech/"
   ],
   "action": {
     "default_popup": "index.html",
