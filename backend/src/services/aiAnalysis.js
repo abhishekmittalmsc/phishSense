@@ -214,6 +214,78 @@ async function geminiAnalyze(emailData) {
   return parsed;
 }
 
+// ─── ImagineTech Provider ──────────────────────────────────────────────────────
+
+async function imagineTechAnalyze(emailData) {
+  const apiUrl   = process.env.IMAGINETECH_API_URL   || 'https://aide-sdlc-backend.imagine.tech/api/v1/brownfield/chat/completions';
+  const apiToken = process.env.IMAGINETECH_API_TOKEN || '';
+  const model    = process.env.IMAGINETECH_MODEL     || 'giga-brain';
+
+  console.log('[AI] Using imagineTech provider');
+
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'user', content: buildPrompt(emailData) },
+        { role: 'assistant', content: '' },
+      ],
+      temperature: 0.5,
+      stream: true,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text().catch(() => `HTTP ${response.status}`);
+    throw new Error(`ImagineTech AI error ${response.status}: ${errText}`);
+  }
+
+  // Consume SSE stream and accumulate content deltas
+  let fullContent = '';
+  const decoder = new TextDecoder();
+  const reader = response.body.getReader();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const text = decoder.decode(value, { stream: true });
+    for (const line of text.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed === 'data: [DONE]') continue;
+      if (!trimmed.startsWith('data: ')) continue;
+      try {
+        const json = JSON.parse(trimmed.slice(6));
+        const delta = json?.choices?.[0]?.delta?.content;
+        if (typeof delta === 'string') fullContent += delta;
+      } catch {
+        // Skip malformed SSE lines
+      }
+    }
+  }
+
+  // Strip markdown fences and parse JSON
+  const cleaned = fullContent.replace(/```(?:json)?\n?/g, '').trim();
+  const start = cleaned.indexOf('{');
+  const end   = cleaned.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('No JSON found in ImagineTech AI response');
+
+  const parsed = JSON.parse(cleaned.slice(start, end + 1));
+
+  // Normalize and fill defaults
+  parsed.verdict              = (parsed.verdict || 'safe').toLowerCase();
+  parsed.manipulationTactics  = parsed.manipulationTactics  || [];
+  parsed.becIndicators        = parsed.becIndicators        || [];
+  parsed.technicalFlags       = parsed.technicalFlags       || [];
+  parsed.detailedReport       = parsed.detailedReport       || [];
+
+  return parsed;
+}
+
 // ─── Main Export ───────────────────────────────────────────────────────────────
 
 /**
@@ -228,11 +300,12 @@ export async function analyzeEmail(emailData) {
 
   try {
     switch (provider) {
-      case 'anthropic': return await anthropicAnalyze(emailData);
-      case 'openai':    return await openaiAnalyze(emailData);
-      case 'gemini':    return await geminiAnalyze(emailData);
+      case 'anthropic':    return await anthropicAnalyze(emailData);
+      case 'openai':       return await openaiAnalyze(emailData);
+      case 'gemini':       return await geminiAnalyze(emailData);
+      case 'imaginetech':  return await imagineTechAnalyze(emailData);
       case 'mock':
-      default:          return mockAnalyze(emailData);
+      default:             return mockAnalyze(emailData);
     }
   } catch (err) {
     console.error(`[AI] Provider "${provider}" failed, falling back to mock:`, err.message);
