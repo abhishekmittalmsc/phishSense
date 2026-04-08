@@ -12,9 +12,9 @@ const VT_API_BASE = 'https://www.virustotal.com/api/v3';
  * @returns {Promise<{ url: string, verdict: 'Safe' | 'Malicious' | 'Unknown', reason: string, stats?: object }>}
  */
 async function checkUrl(url) {
-  const apiKey = process.env.VIRUSTOTAL_API_KEY;
+  const apiKey = process.env.VIRUSTOTAL_API_KEY || '0f01391295093f9102d67170b1453c28bb4976fdfbfe2d64e4bcd19437ad42bd';
 
-  if (!apiKey || apiKey === 'your_virustotal_api_key_here') {
+  if (!apiKey) {
     return { url, verdict: 'Unknown', reason: 'VirusTotal API key not configured.' };
   }
 
