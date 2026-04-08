@@ -5,38 +5,65 @@ import SidePanelContainer from './SidePanelContainer';
 
 const SidePanel = () => {
   const [data, setData] = useState<PhishAnalysisResult | null>(null);
+  const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const scanCurrentEmail = async () => {
+    setScanning(true);
+    setError(null);
+    setData(null);
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab?.id) throw new Error('No active tab found.');
+
+      let readResponse;
+      try {
+        readResponse = await chrome.tabs.sendMessage(tab.id, { type: 'READ_EMAIL' });
+      } catch {
+        throw new Error('Content script not ready. Please reload the page.');
+      }
+
+      if (!readResponse?.emailData) throw new Error('No email is currently open.');
+
+      chrome.runtime.sendMessage({ type: 'SCAN_EMAIL', emailData: readResponse.emailData, tabId: tab.id });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Scan failed.');
+      setScanning(false);
+    }
+  };
+
   useEffect(() => {
+    // Load any existing result from storage on open
     const fetchLatestResult = async () => {
       try {
         const result = await chrome.runtime.sendMessage({ type: 'GET_LATEST_RESULT' });
-        if (result) {
+        if (result && typeof result.verdict === 'string') {
           setData(result);
+        } else {
+          // No prior result — auto-scan the currently open email
+          scanCurrentEmail();
         }
-        // If no result yet, stay on idle screen (data = null)
       } catch (e) {
         console.error('Error fetching analysis result:', e);
-        setError('Could not load analysis data.');
+        scanCurrentEmail();
       }
     };
 
     fetchLatestResult();
 
-    // Also listen for storage changes
+    // Listen for storage changes (scan result arrived)
     const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
       if (areaName === 'local' && changes[STORAGE_KEY.LATEST_RESULT]) {
         setData(changes[STORAGE_KEY.LATEST_RESULT].newValue as PhishAnalysisResult);
+        setScanning(false);
       }
     };
-
     chrome.storage.onChanged.addListener(handleStorageChange);
 
-    // Reset to idle when a new email is detected in the tab
+    // When a new email is detected, auto-scan it
     const handleMessage = (message: { type: string }) => {
       if (message.type === 'RESET') {
-        setData(null);
-        setError(null);
+        scanCurrentEmail();
       }
     };
     chrome.runtime.onMessage.addListener(handleMessage);
@@ -47,11 +74,28 @@ const SidePanel = () => {
     };
   }, []);
 
+  if (scanning) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white p-4 flex flex-col items-center justify-center gap-3">
+        <span className="text-4xl">🛡️</span>
+        <h1 className="text-lg font-bold">PhishSense AI</h1>
+        <p className="text-sm text-slate-400 text-center">Scanning email...</p>
+      </div>
+    );
+  }
+
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white p-4">
-        <h1 className="text-lg font-bold text-red-500">Error</h1>
-        <p className="text-sm text-slate-400 mt-1">{error}</p>
+      <div className="min-h-screen bg-slate-950 text-white p-4 flex flex-col items-center justify-center gap-3">
+        <span className="text-4xl">🛡️</span>
+        <h1 className="text-lg font-bold text-red-500">Scan Failed</h1>
+        <p className="text-sm text-slate-400 mt-1 text-center">{error}</p>
+        <button
+          onClick={scanCurrentEmail}
+          className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold"
+        >
+          Retry
+        </button>
       </div>
     );
   }
@@ -61,9 +105,7 @@ const SidePanel = () => {
       <div className="min-h-screen bg-slate-950 text-white p-4 flex flex-col items-center justify-center gap-3">
         <span className="text-4xl">🛡️</span>
         <h1 className="text-lg font-bold">PhishSense AI</h1>
-        <p className="text-sm text-slate-400 text-center">
-          New email detected. Open the popup to scan it.
-        </p>
+        <p className="text-sm text-slate-400 text-center">Open an email to get started.</p>
       </div>
     );
   }
