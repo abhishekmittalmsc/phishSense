@@ -49,7 +49,7 @@ export class EmailWatcher {
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
     }
-    this.debounceTimer = setTimeout(() => this.checkForNewEmail(), 300);
+    this.debounceTimer = setTimeout(() => this.checkForNewEmail(), 600);
   }
 
   private checkForNewEmail(): void {

@@ -14,8 +14,8 @@ export interface SidePanelData {
   }[];
   sender: {
     email: string;
-    spf: 'Pass' | 'Fail';
-    dmarc: 'Pass' | 'Fail';
+    spf: 'Pass' | 'Fail' | 'Unknown';
+    dmarc: 'Pass' | 'Fail' | 'Unknown';
     displayNameMismatch: boolean;
   };
   explanation: string;

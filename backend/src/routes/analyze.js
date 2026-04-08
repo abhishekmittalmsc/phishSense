@@ -66,7 +66,9 @@ analyzeRouter.post('/', async (req, res) => {
     const response = {
       ...aiResult,
       urlVerdicts, // Extra field for the sidepanel URL verdict list
-      emailBody: emailData.body, // Echo back so the sidepanel can display the actual email
+      emailBody: emailData.body,       // Echo back so the sidepanel can display the actual email
+      sender: emailData.sender,         // Echo back sender fields for the sidepanel
+      senderName: emailData.senderName,
     };
 
     console.log(`[Analyze] Done — verdict: ${response.verdict}, score: ${response.riskScore}, urls checked: ${urlVerdicts.length}`);

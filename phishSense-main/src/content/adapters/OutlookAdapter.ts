@@ -43,7 +43,8 @@ export class OutlookAdapter implements EmailPlatformAdapter {
   }
 
   getBodyElement(): HTMLElement | null {
-    return document.querySelector('div[aria-label="Message body"]') as HTMLElement | null;
+    const container = document.querySelector('#ConversationReadingPaneContainer');
+    return (container ?? document).querySelector('div[aria-label="Message body"]') as HTMLElement | null;
   }
 
   getWatchTarget(): HTMLElement | null {

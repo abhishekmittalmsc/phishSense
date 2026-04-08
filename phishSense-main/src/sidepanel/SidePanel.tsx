@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import type { PhishAnalysisResult } from '../shared/types';
 import { STORAGE_KEY } from '../shared/constants';
 import SidePanelContainer from './SidePanelContainer';
-import { mockData } from './mockData';
 
 const SidePanel = () => {
   const [data, setData] = useState<PhishAnalysisResult | null>(null);
@@ -90,22 +89,28 @@ const SidePanel = () => {
         verdict: (u.verdict === 'Malicious' ? 'Malicious' : 'Safe') as 'Safe' | 'Malicious',
         reason: u.reason,
       }))
-    : mockData.urls; // fallback to mock if no URLs in email
+    : [];
 
-  // Extract real sender info from storage (set by content script via READ_EMAIL)
+  const extraData = data as unknown as { sender?: string; senderName?: string; emailBody?: string };
+  const senderEmail = extraData.sender || 'Unknown';
+  const senderName = extraData.senderName || '';
+  const displayNameMismatch = senderName !== '' && !senderEmail.toLowerCase().includes(senderName.toLowerCase().split(' ')[0]);
+
   const senderData = {
-    email: (data as unknown as { sender?: string }).sender || mockData.sender.email,
-    spf: mockData.sender.spf,
-    dmarc: mockData.sender.dmarc,
-    displayNameMismatch: mockData.sender.displayNameMismatch,
+    email: senderEmail,
+    spf: 'Unknown' as const,
+    dmarc: 'Unknown' as const,
+    displayNameMismatch,
   };
 
+  const verdictLabel = data.verdict.charAt(0).toUpperCase() + data.verdict.slice(1);
+
   const sidePanelData = {
-    classification: (data.verdict.charAt(0).toUpperCase() + data.verdict.slice(1)) as 'Safe' | 'Suspicious' | 'Phishing',
+    classification: verdictLabel as 'Safe' | 'Suspicious' | 'Phishing',
     score: data.riskScore,
-    verdict: { title: data.verdict.charAt(0).toUpperCase() + data.verdict.slice(1), description: data.summary },
+    verdict: { title: verdictLabel, description: data.summary },
     sender: senderData,
-    emailBody: (data as unknown as { emailBody?: string }).emailBody || mockData.emailBody,
+    emailBody: extraData.emailBody || '',
     highlightedPhrases: data.manipulationTactics.map(t => t.evidence).filter(Boolean),
     urls: mappedUrls,
     explanation: data.summary,
