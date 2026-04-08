@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhishSense AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #f0f0f0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+      gap: 0;
+    }
+
+    /* ── Nav ── */
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+
+    .nav button {
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 8px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+    }
+    .nav button:hover { background: #f5f5f5; }
+    .nav button:disabled { opacity: 0.3; cursor: default; }
+    .nav span { font-size: 13px; color: #888; }
+
+    /* ── Slide ── */
+    .deck {
+      width: 960px;
+      max-width: 100%;
+      aspect-ratio: 16 / 9;
+      position: relative;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.12);
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 56px 64px;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .slide.active { display: flex; }
+
+    /* ── Typography ── */
+    .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #3b82f6;
+      margin-bottom: 12px;
+    }
+
+    h1 { font-size: 44px; font-weight: 800; color: #111; line-height: 1.15; }
+    h2 { font-size: 30px; font-weight: 700; color: #111; line-height: 1.2; margin-bottom: 24px; }
+    p  { font-size: 15px; color: #555; line-height: 1.6; }
+
+    .slide-num {
+      position: absolute;
+      bottom: 20px;
+      right: 28px;
+      font-size: 11px;
+      color: #ccc;
+    }
+
+    /* ── Progress ── */
+    .progress {
+      width: 960px;
+      max-width: 100%;
+      height: 3px;
+      background: #e5e7eb;
+      border-radius: 0 0 4px 4px;
+      margin-bottom: 12px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #3b82f6;
+      transition: width .3s;
+    }
+
+    /* ── Slide 1: Title ── */
+    .s-title { background: #0f172a; }
+    .s-title h1 { color: #fff; font-size: 48px; margin-bottom: 12px; }
+    .s-title .sub { font-size: 18px; color: #94a3b8; margin-bottom: 20px; }
+    .s-title .tag { font-size: 13px; color: #3b82f6; font-weight: 600; }
+
+    /* ── Stats row ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 18px 14px;
+      text-align: center;
+    }
+
+    .stat .num { font-size: 30px; font-weight: 800; color: #ef4444; }
+    .stat .num.amber { color: #f59e0b; }
+    .stat .desc { font-size: 12px; color: #64748b; margin-top: 6px; line-height: 1.4; }
+
+    /* ── List ── */
+    .list { display: flex; flex-direction: column; gap: 10px; }
+
+    .list-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      color: #444;
+      line-height: 1.5;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+
+    .list-item .ico { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Feature grid ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .feature {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .feature .ico { font-size: 20px; margin-bottom: 8px; }
+    .feature .title { font-size: 13px; font-weight: 700; color: #111; margin-bottom: 4px; }
+    .feature .desc  { font-size: 12px; color: #64748b; line-height: 1.5; }
+
+    /* ── Architecture ── */
+    .arch {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 20px;
+    }
+
+    .arch-node {
+      flex: 1;
+      text-align: center;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 8px;
+    }
+
+    .arch-node .ico   { font-size: 22px; margin-bottom: 6px; }
+    .arch-node .title { font-size: 12px; font-weight: 700; color: #111; }
+    .arch-node .sub   { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+    .arch-arrow { font-size: 16px; color: #cbd5e1; padding: 0 6px; flex-shrink: 0; }
+
+    .arch-notes {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .arch-note {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    .arch-note strong { display: block; color: #111; font-size: 12px; margin-bottom: 4px; }
+
+    /* ── Tech stack ── */
+    .stack {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .stack-block {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .stack-block .title { font-size: 12px; font-weight: 700; color: #111; margin-bottom: 10px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .tag {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 4px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* ── Output fields ── */
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+
+    .field .name  { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 3px; }
+    .field .type  { font-size: 11px; color: #f59e0b; font-family: monospace; margin-bottom: 4px; }
+    .field .desc  { font-size: 12px; color: #64748b; line-height: 1.4; }
+
+    /* ── Verdict cards ── */
+    .verdicts {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .verdict {
+      flex: 1;
+      border-radius: 8px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .verdict.safe       { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .verdict.suspicious { background: #fffbeb; border: 1px solid #fde68a; }
+    .verdict.phishing   { background: #fef2f2; border: 1px solid #fecaca; }
+
+    .verdict .ico   { font-size: 24px; }
+    .verdict .label { font-size: 15px; font-weight: 700; margin-top: 6px; }
+    .verdict.safe       .label { color: #16a34a; }
+    .verdict.suspicious .label { color: #d97706; }
+    .verdict.phishing   .label { color: #dc2626; }
+    .verdict .range { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+    .ui-sections {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .ui-section {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .ui-section .ico { font-size: 18px; margin-bottom: 4px; }
+
+    /* ── Team ── */
+    .team {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .member {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 24px 14px 18px;
+      text-align: center;
+    }
+
+    .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #3b82f6;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+    }
+
+    .member .name { font-size: 13px; font-weight: 700; color: #111; margin-bottom: 6px; line-height: 1.3; }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 4px;
+    }
+
+    .badge.fe { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .badge.be { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+    /* ── Thank you ── */
+    .s-end { background: #0f172a; align-items: center; text-align: center; gap: 14px; }
+    .s-end h1 { color: #fff; }
+    .s-end p  { color: #94a3b8; font-size: 16px; }
+
+    .hint { font-size: 12px; color: #999; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+  <div class="nav">
+    <button id="prev" disabled>← Back</button>
+    <span id="counter">1 / 9</span>
+    <button id="next">Next →</button>
+  </div>
+
+  <div class="deck">
+
+    <!-- 1. Title -->
+    <div class="slide s-title active" id="s1">
+      <div style="font-size:48px;margin-bottom:16px">🛡️</div>
+      <h1>PhishSense AI</h1>
+      <p class="sub">See the manipulation before you fall for it!!!</p>
+      <p class="tag">AI-powered phishing detection · Chrome Extension · Gmail &amp; Outlook</p>
+      <span class="slide-num">1 / 9</span>
+    </div>
+
+    <!-- 2. Problem -->
+    <div class="slide" id="s2">
+      <div class="label">The Problem</div>
+      <h2>Email scams are getting worse</h2>
+      <div class="stats">
+        <div class="stat">
+          <div class="num">3.4B</div>
+          <div class="desc">Phishing emails sent every day</div>
+        </div>
+        <div class="stat">
+          <div class="num">83%</div>
+          <div class="desc">Companies hit by phishing in 2023</div>
+        </div>
+        <div class="stat">
+          <div class="num">$17.7k</div>
+          <div class="desc">Lost every minute to phishing</div>
+        </div>
+        <div class="stat">
+          <div class="num amber">$2.9B</div>
+          <div class="desc">Lost to BEC attacks in 2023 (FBI IC3)</div>
+        </div>
+      </div>
+      <div class="list">
+        <div class="list-item"><span class="ico">🎭</span>Attackers use psychology — urgency, fear, authority — to trick people into acting fast</div>
+        <div class="list-item"><span class="ico">🏢</span>BEC attacks spoof display names to slip past spam filters and fool employees</div>
+        <div class="list-item"><span class="ico">⏱</span>Users have no help while reading a suspicious email in their browser</div>
+      </div>
+      <span class="slide-num">2 / 9</span>
+    </div>
+
+    <!-- 3. What is PhishSense -->
+    <div class="slide" id="s3">
+      <div class="label">Solution</div>
+      <h2>What does PhishSense do?</h2>
+      <div class="features">
+        <div class="feature">
+          <div class="ico">🔍</div>
+          <div class="title">Scans automatically</div>
+          <div class="desc">Reads the email as soon as you open it — no button to click.</div>
+        </div>
+        <div class="feature">
+          <div class="ico">🧠</div>
+          <div class="title">Gives a risk score</div>
+          <div class="desc">AI rates the email from 0–100 and tells you if it's safe, suspicious, or phishing.</div>
+        </div>
+        <div class="feature">
+          <div class="ico">🎯</div>
+          <div class="title">Spots manipulation</div>
+          <div class="desc">Detects tactics like urgency, fear, and authority with quotes from the email.</div>
+        </div>
+        <div class="feature">
+          <div class="ico">🏢</div>
+          <div class="title">Catches BEC attacks</div>
+          <div class="desc">Flags when the sender's display name doesn't match their email address.</div>
+        </div>
+        <div class="feature">
+          <div class="ico">🔗</div>
+          <div class="title">Checks every link</div>
+          <div class="desc">Scans all URLs in the email against VirusTotal to catch malicious sites.</div>
+        </div>
+        <div class="feature">
+          <div class="ico">📋</div>
+          <div class="title">Clear report</div>
+          <div class="desc">Shows a plain-English summary with a full breakdown in the side panel.</div>
+        </div>
+      </div>
+      <span class="slide-num">3 / 9</span>
+    </div>
+
+    <!-- 4. How it works -->
+    <div class="slide" id="s4">
+      <div class="label">Architecture</div>
+      <h2>How it works</h2>
+      <div class="arch">
+        <div class="arch-node">
+          <div class="ico">📧</div>
+          <div class="title">Email Page</div>
+          <div class="sub">Gmail / Outlook</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">
+          <div class="ico">⚙️</div>
+          <div class="title">Extension</div>
+          <div class="sub">Chrome MV3</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">
+          <div class="ico">🖥️</div>
+          <div class="title">Local Backend</div>
+          <div class="sub">Node / Express</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">
+          <div class="ico">🤖</div>
+          <div class="title">AI Model</div>
+          <div class="sub">giga-brain</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">
+          <div class="ico">📋</div>
+          <div class="title">Side Panel</div>
+          <div class="sub">Results UI</div>
+        </div>
+      </div>
+      <div class="arch-notes">
+        <div class="arch-note"><strong>Email Page</strong>Reads sender, subject, body, and links from the page</div>
+        <div class="arch-note"><strong>Extension</strong>Passes the data securely to the local backend</div>
+        <div class="arch-note"><strong>Backend</strong>Calls the AI and checks URLs with VirusTotal</div>
+        <div class="arch-note"><strong>Side Panel</strong>Shows the result instantly while you read the email</div>
+      </div>
+      <span class="slide-num">4 / 9</span>
+    </div>
+
+    <!-- 5. Tech stack -->
+    <div class="slide" id="s5">
+      <div class="label">Technology</div>
+      <h2>Built with</h2>
+      <div class="stack">
+        <div class="stack-block">
+          <div class="title">Chrome Extension</div>
+          <div class="tags">
+            <span class="tag">TypeScript</span>
+            <span class="tag">React</span>
+            <span class="tag">Vite</span>
+            <span class="tag">Manifest V3</span>
+            <span class="tag">Service Worker</span>
+            <span class="tag">Side Panel API</span>
+          </div>
+        </div>
+        <div class="stack-block">
+          <div class="title">Backend</div>
+          <div class="tags">
+            <span class="tag">Node.js</span>
+            <span class="tag">Express</span>
+            <span class="tag">Streaming SSE</span>
+            <span class="tag">VirusTotal API</span>
+          </div>
+        </div>
+        <div class="stack-block">
+          <div class="title">AI Providers</div>
+          <div class="tags">
+            <span class="tag">ImagineTech</span>
+            <span class="tag">Claude</span>
+            <span class="tag">GPT-4o</span>
+            <span class="tag">Gemini</span>
+          </div>
+        </div>
+        <div class="stack-block">
+          <div class="title">Platforms Supported</div>
+          <div class="tags">
+            <span class="tag">Gmail</span>
+            <span class="tag">Outlook Web</span>
+            <span class="tag">Office 365</span>
+          </div>
+        </div>
+      </div>
+      <span class="slide-num">5 / 9</span>
+    </div>
+
+    <!-- 6. What the AI returns -->
+    <div class="slide" id="s6">
+      <div class="label">AI Output</div>
+      <h2>What the AI tells us</h2>
+      <div class="fields">
+        <div class="field">
+          <div class="name">Risk Score</div>
+          <div class="type">number · 0–100</div>
+          <div class="desc">How dangerous the email is. Under 30 is safe, over 70 is phishing.</div>
+        </div>
+        <div class="field">
+          <div class="name">Verdict</div>
+          <div class="type">safe · suspicious · phishing</div>
+          <div class="desc">A simple label based on the risk score.</div>
+        </div>
+        <div class="field">
+          <div class="name">Manipulation Tactics</div>
+          <div class="type">list with severity</div>
+          <div class="desc">Which psychological tricks were used, with evidence from the email text.</div>
+        </div>
+        <div class="field">
+          <div class="name">BEC Indicators</div>
+          <div class="type">list</div>
+          <div class="desc">Signs the sender is impersonating someone — e.g. name doesn't match email address.</div>
+        </div>
+        <div class="field">
+          <div class="name">Technical Flags</div>
+          <div class="type">list</div>
+          <div class="desc">Issues like non-HTTPS links, URL shorteners, or malicious domains.</div>
+        </div>
+        <div class="field">
+          <div class="name">Summary &amp; Report</div>
+          <div class="type">plain text</div>
+          <div class="desc">A short plain-English summary plus a detailed list of findings.</div>
+        </div>
+      </div>
+      <span class="slide-num">6 / 9</span>
+    </div>
+
+    <!-- 7. UI -->
+    <div class="slide" id="s7">
+      <div class="label">User Interface</div>
+      <h2>What you see in the side panel</h2>
+      <div class="verdicts">
+        <div class="verdict safe">
+          <div class="ico">✅</div>
+          <div class="label">Safe</div>
+          <div class="range">Score 0–30</div>
+        </div>
+        <div class="verdict suspicious">
+          <div class="ico">⚠️</div>
+          <div class="label">Suspicious</div>
+          <div class="range">Score 31–69</div>
+        </div>
+        <div class="verdict phishing">
+          <div class="ico">⛔️</div>
+          <div class="label">Phishing</div>
+          <div class="range">Score 70–100</div>
+        </div>
+      </div>
+      <div class="ui-sections">
+        <div class="ui-section"><div class="ico">📊</div>Risk gauge</div>
+        <div class="ui-section"><div class="ico">👤</div>Sender info</div>
+        <div class="ui-section"><div class="ico">🎯</div>Manipulation tactics</div>
+        <div class="ui-section"><div class="ico">🏢</div>BEC indicators</div>
+        <div class="ui-section"><div class="ico">🔗</div>Link verdicts</div>
+        <div class="ui-section"><div class="ico">📝</div>Highlighted email</div>
+        <div class="ui-section"><div class="ico">📋</div>Detailed report</div>
+        <div class="ui-section"><div class="ico">🔄</div>Auto-scans on open</div>
+      </div>
+      <span class="slide-num">7 / 9</span>
+    </div>
+
+    <!-- 8. Team -->
+    <div class="slide" id="s8">
+      <div class="label">The Team</div>
+      <h2>Built by</h2>
+      <div class="team">
+        <div class="member">
+          <div class="avatar">AU</div>
+          <div class="name">Abhishek Upadhyay</div>
+          <span class="badge fe">Frontend</span>
+        </div>
+        <div class="member">
+          <div class="avatar" style="background:#6366f1">KN</div>
+          <div class="name">Krishna Chaitanya Neti</div>
+          <span class="badge fe">Frontend</span>
+        </div>
+        <div class="member">
+          <div class="avatar" style="background:#22c55e">AM</div>
+          <div class="name">Abhishek Mittal</div>
+          <span class="badge be">Backend</span>
+        </div>
+        <div class="member">
+          <div class="avatar" style="background:#f59e0b">AA</div>
+          <div class="name">Arpit Ajmera</div>
+          <span class="badge fe">Frontend</span>
+        </div>
+      </div>
+      <span class="slide-num">8 / 9</span>
+    </div>
+
+    <!-- 9. Thank you -->
+    <div class="slide s-end" id="s9">
+      <div style="font-size:48px">🛡️</div>
+      <h1>PhishSense AI</h1>
+      <p>See the manipulation before you fall for it!!!</p>
+      <span class="slide-num">9 / 9</span>
+    </div>
+
+  </div><!-- /deck -->
+
+  <div class="progress">
+    <div class="progress-fill" id="fill" style="width:11.1%"></div>
+  </div>
+
+  <p class="hint">← → arrow keys to navigate</p>
+
+  <script>
+    const TOTAL = 9;
+    let cur = 1;
+
+    const prev  = document.getElementById('prev');
+    const next  = document.getElementById('next');
+    const count = document.getElementById('counter');
+    const fill  = document.getElementById('fill');
+
+    function go(n) {
+      document.getElementById('s' + cur).classList.remove('active');
+      cur = n;
+      document.getElementById('s' + cur).classList.add('active');
+      count.textContent = cur + ' / ' + TOTAL;
+      fill.style.width  = (cur / TOTAL * 100) + '%';
+      prev.disabled = cur === 1;
+      next.disabled = cur === TOTAL;
+    }
+
+    prev.addEventListener('click', () => { if (cur > 1)     go(cur - 1); });
+    next.addEventListener('click', () => { if (cur < TOTAL) go(cur + 1); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { if (cur < TOTAL) go(cur + 1); }
+      if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { if (cur > 1)     go(cur - 1); }
+    });
+  </script>
+</body>
+</html>
