@@ -1,9 +1,9 @@
 .verdict-banner {
   display: flex;
   align-items: center;
-  padding: 16px;
+  padding: 14px 16px;
   border-radius: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .verdict-icon {

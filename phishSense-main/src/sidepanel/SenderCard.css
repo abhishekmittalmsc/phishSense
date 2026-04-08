@@ -2,8 +2,8 @@
   background-color: #fff;
   border: 1px solid #ddd;
   padding: 15px;
-  border-radius: 6px;
-  margin-bottom: 20px;
+  border-radius: 8px;
+  margin-bottom: 16px;
 }
 
 .sender-card h3 {
@@ -13,17 +13,37 @@
   color: #555;
 }
 
-.sender-info {
+.sender-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.sender-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .sender-label {
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #888;
+  flex-shrink: 0;
 }
 
 .sender-value {
+  font-size: 13px;
+  color: #222;
+  text-align: right;
+  word-break: break-all;
+}
+
+.sender-value.mono {
   font-family: 'Courier New', Courier, monospace;
 }
 

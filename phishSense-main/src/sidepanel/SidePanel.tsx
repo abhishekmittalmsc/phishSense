@@ -128,7 +128,7 @@ const SidePanel = () => {
   const mappedUrls = apiResult.urlVerdicts && apiResult.urlVerdicts.length > 0
     ? apiResult.urlVerdicts.map(u => ({
         link: u.url,
-        verdict: (u.verdict === 'Malicious' ? 'Malicious' : 'Safe') as 'Safe' | 'Malicious',
+        verdict: (u.verdict === 'Malicious' ? 'Malicious' : u.verdict === 'Safe' ? 'Safe' : 'Unknown') as 'Safe' | 'Malicious' | 'Unknown',
         reason: u.reason,
       }))
     : [];
@@ -140,6 +140,7 @@ const SidePanel = () => {
 
   const senderData = {
     email: senderEmail,
+    senderName,
     spf: 'Unknown' as const,
     dmarc: 'Unknown' as const,
     displayNameMismatch,
@@ -156,6 +157,9 @@ const SidePanel = () => {
     highlightedPhrases: data.manipulationTactics.map(t => t.evidence).filter(Boolean),
     urls: mappedUrls,
     explanation: data.summary,
+    manipulationTactics: data.manipulationTactics,
+    becIndicators: data.becIndicators,
+    detailedReport: data.detailedReport,
   };
 
   return <SidePanelContainer data={sidePanelData} />;

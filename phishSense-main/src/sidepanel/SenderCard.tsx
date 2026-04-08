@@ -10,27 +10,35 @@ const SenderCard: React.FC<SenderCardProps> = ({ sender }) => {
   return (
     <div className="sender-card">
       <h3>Sender Analysis</h3>
-      <div className="sender-info">
-        <span className="sender-label">Email:</span>
-        <span className="sender-value">{sender.email}</span>
+      <div className="sender-info-grid">
+        {sender.senderName && (
+          <div className="sender-row">
+            <span className="sender-label">Name</span>
+            <span className="sender-value">{sender.senderName}</span>
+          </div>
+        )}
+        <div className="sender-row">
+          <span className="sender-label">Email</span>
+          <span className="sender-value mono">{sender.email}</span>
+        </div>
       </div>
-      {sender.spf !== 'Unknown' || sender.dmarc !== 'Unknown' ? (
+
+      {(sender.spf !== 'Unknown' || sender.dmarc !== 'Unknown') && (
         <div className="sender-auth">
           <div className={`auth-status ${sender.spf.toLowerCase()}`}>
-            <span className="auth-label">SPF:</span>
+            <span className="auth-label">SPF</span>
             <span className="auth-value">{sender.spf}</span>
           </div>
           <div className={`auth-status ${sender.dmarc.toLowerCase()}`}>
-            <span className="auth-label">DMARC:</span>
+            <span className="auth-label">DMARC</span>
             <span className="auth-value">{sender.dmarc}</span>
           </div>
         </div>
-      ) : (
-        <p className="auth-unavailable">SPF/DMARC data not available from email client.</p>
       )}
+
       {sender.displayNameMismatch && (
         <div className="mismatch-warning">
-          ⚠️ Display name does not match sender address.
+          ⚠️ Display name &ldquo;{sender.senderName}&rdquo; does not match sender address.
         </div>
       )}
     </div>
